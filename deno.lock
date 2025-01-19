@@ -1,0 +1,14 @@
+{
+  "version": "4",
+  "redirects": {
+    "https://esm.sh/typed-binary@^4.3.1?target=denonext": "https://esm.sh/typed-binary@4.3.2?target=denonext"
+  },
+  "remote": {
+    "https://esm.sh/typed-binary@4.3.2/denonext/typed-binary.mjs": "45bf558c69af832ea84ea999f17ccabef85e3e2e310ecaa5dfe3b28bba59f376",
+    "https://esm.sh/typed-binary@4.3.2?target=denonext": "5ff27db815eea664864016d1ed0dc33ec12ebbdb0d7245f1cf4e73a093c4cecf",
+    "https://esm.sh/typegpu@0.3.2/data": "8e0d06a66084e694340c27cefac9912779ef82c7a8ab6b5ea6672f51008167bc",
+    "https://esm.sh/typegpu@0.3.2/denonext/chunk-BGPVBIFN.mjs": "bea42e6c21e7e397324208025d9371fc8f906efca3326aadc277c209c3e8d982",
+    "https://esm.sh/typegpu@0.3.2/denonext/chunk-MCUGRE3S.mjs": "8c7663507429433992db7d7f85653091dbb4284ebf63cf076e473aae3676a95f",
+    "https://esm.sh/typegpu@0.3.2/denonext/data.mjs": "40d82a9b03dff3a8f257184aa97109d8344cc152cb10751539f9defec666a9b1"
+  }
+}
