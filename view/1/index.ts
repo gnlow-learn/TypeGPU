@@ -1,10 +1,10 @@
-import { GpuWrapper } from "./util.ts"
+import { GpuWrapper } from "../../src/util.ts"
 import * as d from "https://esm.sh/typegpu@0.3.2/data"
 
 const g = await GpuWrapper.init({
     $canvas: document.querySelector("canvas")!,
-    vertShader: await fetch("src/vert.wgsl").then(x => x.text()),
-    fragShader: await fetch("src/frag.wgsl").then(x => x.text()),
+    vertShader: await fetch("vert.wgsl").then(x => x.text()),
+    fragShader: await fetch("frag.wgsl").then(x => x.text()),
     uniforms: [
         d.struct({
             x: d.u32,

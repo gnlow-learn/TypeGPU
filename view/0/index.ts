@@ -19,12 +19,12 @@ const pipeline = device.createRenderPipeline({
     layout: "auto",
     vertex: {
         module: device.createShaderModule({
-            code: await fetch("src/vert.wgsl").then(x => x.text()),
+            code: await fetch("vert.wgsl").then(x => x.text()),
         }),
     },
     fragment: {
         module: device.createShaderModule({
-            code: await fetch("src/frag.wgsl").then(x => x.text())
+            code: await fetch("frag.wgsl").then(x => x.text())
         }),
         targets: [{ format }],
     },
