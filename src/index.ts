@@ -38,7 +38,7 @@ const Span = d.struct({
     y: d.u32,
 })
 
-const spanBuffer = root.createBuffer(Span, { x: 10, y: 10 }).$usage("uniform")
+const spanBuffer = root.createBuffer(Span).$usage("uniform")
 
 const bindGroup = device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
@@ -53,6 +53,8 @@ const bindGroup = device.createBindGroup({
 })
 
 const draw = (spanX: number, spanY: number) => {
+    spanBuffer.write({ x: spanX, y: spanY })
+    
     const textureView = ctx.getCurrentTexture().createView()
     const renderPassDescriptor: GPURenderPassDescriptor = {
         colorAttachments: [
@@ -64,8 +66,6 @@ const draw = (spanX: number, spanY: number) => {
             }
         ]
     }
-
-    spanBuffer.write({ x: spanX, y: spanY })
 
     const commandEncoder = device.createCommandEncoder()
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
