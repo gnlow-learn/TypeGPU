@@ -1,12 +1,13 @@
-import tgpu, { TgpuRoot } from "https://esm.sh/typegpu@0.3.2"
+import tgpu, { TgpuRoot, TgpuBuffer } from "https://esm.sh/typegpu@0.3.2"
 
 type AnyData = Parameters<TgpuRoot["createBuffer"]>[0]
+type Layout = Parameters<typeof tgpu.bindGroupLayout>[0]
 
 interface GpuWrapperInfo {
     $canvas: HTMLCanvasElement,
     vertShader: string,
     fragShader: string,
-    uniforms?: AnyData[],
+    layout?: Layout,
 }
 
 export class GpuWrapper {
@@ -14,8 +15,8 @@ export class GpuWrapper {
     ctx
     format = navigator.gpu.getPreferredCanvasFormat()
     pipeline
-    uniforms
     bindGroup
+    buffers
 
     constructor(
         root: TgpuRoot,
@@ -23,7 +24,7 @@ export class GpuWrapper {
             $canvas,
             vertShader,
             fragShader,
-            uniforms,
+            layout,
         }: GpuWrapperInfo,
     ) {
         this.root = root
@@ -38,38 +39,50 @@ export class GpuWrapper {
             alphaMode: "premultiplied",
         })
 
+        this.buffers = {} as Record<string, TgpuBuffer<AnyData>>
+        Object.entries(layout || {})
+            .forEach(([k, v]) => {
+                if ("uniform" in v!) {
+                    this.buffers[k] =
+                        root.createBuffer(v.uniform)
+                            .$usage("uniform")
+                }
+            })
+
+        const bgLayout = tgpu.bindGroupLayout(layout || {})
+        this.bindGroup = root.createBindGroup(
+            bgLayout,
+            this.buffers,
+        )
+
         this.pipeline = device.createRenderPipeline({
-            layout: "auto",
+            layout: device.createPipelineLayout({
+                bindGroupLayouts: [root.unwrap(bgLayout)]
+            }),
             vertex: {
                 module: device.createShaderModule({
-                    code: vertShader,
+                    code: tgpu.resolve({
+                        template: vertShader,
+                        externals: {
+                            ...bgLayout.bound,
+                        },
+                    }),
                 }),
             },
             fragment: {
                 module: device.createShaderModule({
-                    code: fragShader,
+                    code: tgpu.resolve({
+                        template: fragShader,
+                        externals: {
+                            ...bgLayout.bound,
+                        },
+                    }),
                 }),
                 targets: [{ format }],
             },
             primitive: {
                 topology: "triangle-strip",
             }
-        })
-
-        this.uniforms = uniforms?.map(uniform =>
-            this.root.createBuffer(uniform).$usage("uniform")
-        ) || []
-
-        this.bindGroup = device.createBindGroup({
-            layout: this.pipeline.getBindGroupLayout(0),
-            entries: [
-                ...this.uniforms.map((uniform, i) => ({
-                    binding: i,
-                    resource: {
-                        buffer: uniform.buffer,
-                    }
-                })),
-            ]
         })
     }
     draw() {
@@ -88,7 +101,7 @@ export class GpuWrapper {
         const commandEncoder = this.root.device.createCommandEncoder()
         const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
         passEncoder.setPipeline(this.pipeline)
-        passEncoder.setBindGroup(0, this.bindGroup)
+        passEncoder.setBindGroup(0, this.root.unwrap(this.bindGroup))
         passEncoder.draw(4)
         passEncoder.end()
 

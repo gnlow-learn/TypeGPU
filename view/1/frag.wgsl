@@ -1,10 +1,3 @@
-struct Span {
-    x: u32,
-    y: u32,
-}
-
-@group(0) @binding(0) var<uniform> span: Span;
-
 @fragment
 fn main(
     @location(0) uv: vec2f,
