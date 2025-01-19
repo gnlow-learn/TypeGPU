@@ -17,3 +17,14 @@ setTimeout(() => {
     g.uniforms[0].write({ x: 10, y: 20 })
     g.draw()
 }, 100)
+
+const tick = () => new Promise(requestAnimationFrame)
+
+while (true) {
+    await tick()
+    g.uniforms[0].write({
+        x: Math.sin(Date.now() / 1000) * 10 + 15,
+        y: 20,
+    })
+    g.draw()
+}
