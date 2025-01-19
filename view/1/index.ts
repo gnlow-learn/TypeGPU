@@ -10,6 +10,7 @@ const g = await GpuWrapper.init({
             x: d.u32,
             y: d.u32,
         }) },
+        blue: { uniform: d.f32 },
     }
 })
 
@@ -21,5 +22,6 @@ while (true) {
         x: Math.sin(Date.now() / 1000) * 10 + 15,
         y: 20,
     })
+    g.buffers.blue.write(Math.sin(Date.now() / 1000) * 0.5 + 0.5)
     g.draw()
 }

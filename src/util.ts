@@ -1,16 +1,20 @@
-import tgpu, { TgpuRoot, TgpuBuffer } from "https://esm.sh/typegpu@0.3.2"
+import tgpu, {
+    TgpuRoot,
+    TgpuLayoutEntry,
+    Uniform,
+} from "https://esm.sh/typegpu@0.3.2"
 
 type AnyData = Parameters<TgpuRoot["createBuffer"]>[0]
-type Layout = Parameters<typeof tgpu.bindGroupLayout>[0]
+type Layout = Record<string, TgpuLayoutEntry | null>
 
-interface GpuWrapperInfo {
+interface GpuWrapperInfo<T extends Layout> {
     $canvas: HTMLCanvasElement,
     vertShader: string,
     fragShader: string,
-    layout?: Layout,
+    layout?: T,
 }
 
-export class GpuWrapper {
+export class GpuWrapper<T extends Layout> {
     root
     ctx
     format = navigator.gpu.getPreferredCanvasFormat()
@@ -25,7 +29,7 @@ export class GpuWrapper {
             vertShader,
             fragShader,
             layout,
-        }: GpuWrapperInfo,
+        }: GpuWrapperInfo<T>,
     ) {
         this.root = root
         this.ctx = $canvas.getContext("webgpu") as unknown as GPUCanvasContext
@@ -39,20 +43,24 @@ export class GpuWrapper {
             alphaMode: "premultiplied",
         })
 
-        this.buffers = {} as Record<string, TgpuBuffer<AnyData>>
+        this.buffers = {} as {
+            [K in keyof T]: T[K] extends { uniform: infer D }
+                ? ReturnType<typeof root.createBuffer<D extends AnyData ? D : never>> & Uniform
+                : never
+        }
         Object.entries(layout || {})
             .forEach(([k, v]) => {
                 if ("uniform" in v!) {
-                    this.buffers[k] =
+                    (this.buffers[k] as unknown) =
                         root.createBuffer(v.uniform)
                             .$usage("uniform")
                 }
             })
 
-        const bgLayout = tgpu.bindGroupLayout(layout || {})
+        const bgLayout = tgpu.bindGroupLayout<T>(layout || {} as T)
         this.bindGroup = root.createBindGroup(
             bgLayout,
-            this.buffers,
+            this.buffers as any,
         )
 
         this.pipeline = device.createRenderPipeline({
@@ -108,7 +116,7 @@ export class GpuWrapper {
         this.root.device.queue.submit([commandEncoder.finish()])
     }
     
-    static async init(info: GpuWrapperInfo) {
+    static async init<T extends Layout>(info: GpuWrapperInfo<T>) {
         return new GpuWrapper(
             await tgpu.init(),
             info,
